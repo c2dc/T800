@@ -1,0 +1,29 @@
+A = {
+    NAO_LIGADO (0), -> 'n'
+    DT10       (1), -> '0'
+    DT12       (2), -> '2'
+    MLP        (3)  -> 'm'
+}
+
+I = {
+    16Mbps (1),
+    8Mbps  (2)
+}
+
+M = {
+    com_nmap
+    sem_nmap
+}
+
+===============================================================================
+FIREWALL_LIGADO:
+
+A1I1M0  A1I2M0
+A2I1M0  A2I2M0
+A3I1M0  A3I2MO
+
+
+FIREWALL_DESLIGADO:
+
+A0I1M0  A0I2M1
+A0I1M0  A0I2M1

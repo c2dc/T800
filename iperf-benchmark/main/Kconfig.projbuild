@@ -1,0 +1,72 @@
+menu "Benchmark Configuration"
+
+    config EXAMPLE_IPV4
+        bool "IPV4"
+        default y
+
+    config EXAMPLE_IPV6
+        bool "IPV6"
+        default n
+        select EXAMPLE_CONNECT_IPV6
+
+    config EXAMPLE_PORT
+        int "Port"
+        range 0 65535
+        default 3333
+        help
+            Local port the example server will listen on.
+
+    config EXAMPLE_KEEPALIVE_IDLE
+        int "TCP keep-alive idle time(s)"
+        default 5
+        help
+            Keep-alive idle time. In idle time without receiving any data from peer, will send keep-alive probe packet
+
+    config EXAMPLE_KEEPALIVE_INTERVAL
+        int "TCP keep-alive interval time(s)"
+        default 5
+        help
+            Keep-alive probe packet interval time.
+
+    config EXAMPLE_KEEPALIVE_COUNT
+        int "TCP keep-alive packet retry send counts"
+        default 3
+        help
+            Keep-alive probe packet retry count.
+    
+    config ATTACKER_ADDRESS
+        string "IPv4 address of attacker machine"
+        default 192.168.15.114
+        help
+            The IPv4 of the machine that runs attacker.py
+    
+    config ESP32_ADDRESS
+        string "IPv4 address of ESP32 machine"
+        default 192.168.15.117
+        help
+            The IPv4 of the ESP32 IoT device running the benchmark
+    
+    config ATTACKER_PORT
+        int "attacker port"
+        range 0 65535
+        default 6767
+    
+    config ATTACKER_LOG_PORT
+        int "attacker port to send the logged data"
+        range 0 65535
+        default 6768
+    
+    config IPERF_PORT
+        int "iperf port"
+        range 0 65535
+        default 5001
+    
+    config SAMPLING_INTERVAL
+        int "interval of benchmark sampling"
+        default 1
+
+    config BENCHMARK_DURATION
+        int "duration of the benchmark"
+        default 5
+    
+endmenu
