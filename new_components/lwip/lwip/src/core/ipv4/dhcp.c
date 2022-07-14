@@ -127,11 +127,6 @@
 #define LWIP_DHCP_PROVIDE_DNS_SERVERS 0
 #endif
 
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-#define DHCP_OPTION_VSI_MAX         16
-static u32_t dhcp_option_vsi[DHCP_OPTION_VSI_MAX] = {0};
-#endif
-
 /** Option handling: options are parsed in dhcp_parse_reply
  * and saved in an array where other functions can load them from.
  * This might be moved into the struct dhcp (not necessarily since
@@ -149,10 +144,6 @@ enum dhcp_option_idx {
 #if ESP_DHCP  
   DHCP_OPTION_IDX_MTU,
 #endif /* ESP_DHCP */  
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-  DHCP_OPTION_IDX_VSI,
-  DHCP_OPTION_IDX_VSI_LAST = DHCP_OPTION_IDX_VSI + DHCP_OPTION_VSI_MAX -1,
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
 #if LWIP_DHCP_PROVIDE_DNS_SERVERS
   DHCP_OPTION_IDX_DNS_SERVER,
   DHCP_OPTION_IDX_DNS_SERVER_LAST = DHCP_OPTION_IDX_DNS_SERVER + LWIP_DHCP_PROVIDE_DNS_SERVERS - 1,
@@ -176,9 +167,6 @@ static u8_t dhcp_discover_request_options[] = {
   DHCP_OPTION_SUBNET_MASK,
   DHCP_OPTION_ROUTER,
   DHCP_OPTION_BROADCAST
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-  , DHCP_OPTION_VSI
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
 #if LWIP_DHCP_PROVIDE_DNS_SERVERS
   , DHCP_OPTION_DNS_SERVER
 #endif /* LWIP_DHCP_PROVIDE_DNS_SERVERS */
@@ -236,12 +224,6 @@ static u16_t dhcp_option_hostname(u16_t options_out_len, u8_t *options, struct n
 #if ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID
 static u16_t dhcp_option_client_id(struct netif *netif, struct dhcp_msg *msg_out, u16_t options_out_len);
 #endif /* ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID */
-
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-/* set dhcp option60 */
-static u16_t dhcp_option_vendor_class_identifier(struct netif *netif, struct dhcp_msg *msg_out, u16_t options_out_len);
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
-
 /* always add the DHCP options trailer to end and pad */
 static void dhcp_option_trailer(u16_t options_out_len, u8_t *options, struct pbuf *p_out);
 
@@ -368,14 +350,6 @@ dhcp_handle_offer(struct netif *netif, struct dhcp_msg *msg_in)
 
   LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_handle_offer(netif=%p) %c%c%"U16_F"\n",
               (void *)netif, netif->name[0], netif->name[1], (u16_t)netif->num));
-
-  /* Vendor Specific Information */
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-  for (u8_t n = 0; (n < DHCP_OPTION_VSI_MAX) && dhcp_option_given(dhcp, DHCP_OPTION_IDX_VSI + n); n++) {
-    dhcp_option_vsi[n] = lwip_htonl(dhcp_get_option_value(dhcp, DHCP_OPTION_IDX_VSI + n));
-  }
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
-
   /* obtain the server address */
   if (dhcp_option_given(dhcp, DHCP_OPTION_IDX_SERVER_ID)) {
     dhcp->request_timeout = 0; /* stop timer */
@@ -436,11 +410,6 @@ dhcp_select(struct netif *netif)
     options_out_len = dhcp_option_client_id(netif, msg_out, options_out_len);
 #endif /* ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID */
 
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-    options_out_len = dhcp_option_vendor_class_identifier(netif, msg_out, options_out_len);
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
-
-
     options_out_len = dhcp_option(options_out_len, msg_out->options, DHCP_OPTION_SERVER_ID, 4);
     options_out_len = dhcp_option_long(options_out_len, msg_out->options, lwip_ntohl(ip4_addr_get_u32(ip_2_ip4(&dhcp->server_ip_addr))));
 
@@ -473,21 +442,6 @@ dhcp_select(struct netif *netif)
   return result;
 }
 
-#if ESP_DHCP
-/**
- * Restarts the DHCP client, typically after the dhcp_release_and_stop()
- * This is equivalent to dhcp_start(), but preserves the dhcp callback
- */
-static void
-dhcp_restart(struct netif *netif)
-{
-  struct dhcp *dhcp = netif_dhcp_data(netif);
-  void (*cb)(struct netif*) = dhcp->cb;
-  dhcp_start(netif);
-  dhcp->cb = cb;
-}
-#endif /* ESP_DHCP */
-
 /**
  * The DHCP timer that checks for lease renewal/rebind timeouts.
  * Must be called once a minute (see @ref DHCP_COARSE_TIMER_SECS).
@@ -507,11 +461,7 @@ dhcp_coarse_tmr(void)
         LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_coarse_tmr(): t0 timeout\n"));
         /* this clients' lease time has expired */
         dhcp_release_and_stop(netif);
-#if ESP_DHCP
-        dhcp_restart(netif);
-#else
         dhcp_start(netif);
-#endif /* ESP_DHCP */
         /* timer is active (non zero), and triggers (zeroes) now? */
       } else if (dhcp->t2_rebind_time && (dhcp->t2_rebind_time-- == 1)) {
         LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_coarse_tmr(): t2 timeout\n"));
@@ -583,11 +533,7 @@ dhcp_timeout(struct netif *netif)
     } else {
       LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_timeout(): REQUESTING, releasing, restarting\n"));
       dhcp_release_and_stop(netif);
-#if ESP_DHCP
-      dhcp_restart(netif);
-#else
       dhcp_start(netif);
-#endif /* ESP_DHCP */
     }
 #if DHCP_DOES_ARP_CHECK
     /* received no ARP reply for the offered address (which is good) */
@@ -689,9 +635,9 @@ dhcp_handle_ack(struct netif *netif, struct dhcp_msg *msg_in)
 {
   struct dhcp *dhcp = netif_dhcp_data(netif);
 
-#if LWIP_DHCP_PROVIDE_DNS_SERVERS || LWIP_DHCP_GET_NTP_SRV || !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
+#if LWIP_DHCP_PROVIDE_DNS_SERVERS || LWIP_DHCP_GET_NTP_SRV
   u8_t n;
-#endif /* LWIP_DHCP_PROVIDE_DNS_SERVERS || LWIP_DHCP_GET_NTP_SRV || !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
+#endif /* LWIP_DHCP_PROVIDE_DNS_SERVERS || LWIP_DHCP_GET_NTP_SRV */
 #if LWIP_DHCP_GET_NTP_SRV
   ip4_addr_t ntp_server_addrs[LWIP_DHCP_MAX_NTP_SERVERS];
 #endif
@@ -725,14 +671,6 @@ dhcp_handle_ack(struct netif *netif, struct dhcp_msg *msg_in)
       }
   }
 #endif /* ESP_DHCP */
-
-  /* Vendor Specific Information */
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-  for (n = 0; (n < DHCP_OPTION_VSI_MAX) && dhcp_option_given(dhcp, DHCP_OPTION_IDX_VSI + n); n++) {
-    dhcp_option_vsi[n] = lwip_htonl(dhcp_get_option_value(dhcp, DHCP_OPTION_IDX_VSI + n));
-  }
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
-
   /* renewal period given? */
   if (dhcp_option_given(dhcp, DHCP_OPTION_IDX_T2)) {
     /* remember given rebind period */
@@ -1101,10 +1039,6 @@ dhcp_decline(struct netif *netif)
     options_out_len = dhcp_option_client_id(netif, msg_out, options_out_len);
 #endif /* ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID */
 
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-    options_out_len = dhcp_option_vendor_class_identifier(netif, msg_out, options_out_len);
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
-
     LWIP_HOOK_DHCP_APPEND_OPTIONS(netif, dhcp, DHCP_STATE_BACKING_OFF, msg_out, DHCP_DECLINE, &options_out_len);
     dhcp_option_trailer(options_out_len, msg_out->options, p_out);
 
@@ -1166,10 +1100,6 @@ dhcp_discover(struct netif *netif)
 #if !ESP_DHCP_DISABLE_CLIENT_ID
     options_out_len = dhcp_option_client_id(netif, msg_out, options_out_len);
 #endif /* !ESP_DHCP_DISABLE_CLIENT_ID */
-
-#if !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-    options_out_len = dhcp_option_vendor_class_identifier(netif, msg_out, options_out_len);
-#endif /* !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
 #endif/* ESP_DHCP */
 
     options_out_len = dhcp_option(options_out_len, msg_out->options, DHCP_OPTION_PARAMETER_REQUEST_LIST, LWIP_ARRAYSIZE(dhcp_discover_request_options));
@@ -1415,10 +1345,6 @@ dhcp_renew(struct netif *netif)
     options_out_len = dhcp_option_client_id(netif, msg_out, options_out_len);
 #endif /* ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID */
 
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-    options_out_len = dhcp_option_vendor_class_identifier(netif, msg_out, options_out_len);
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
-
     LWIP_HOOK_DHCP_APPEND_OPTIONS(netif, dhcp, DHCP_STATE_RENEWING, msg_out, DHCP_REQUEST, &options_out_len);
     dhcp_option_trailer(options_out_len, msg_out->options, p_out);
 
@@ -1477,10 +1403,6 @@ dhcp_rebind(struct netif *netif)
 #if ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID
     options_out_len = dhcp_option_client_id(netif, msg_out, options_out_len);
 #endif /* ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID */
-
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-    options_out_len = dhcp_option_vendor_class_identifier(netif, msg_out, options_out_len);
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
 
     LWIP_HOOK_DHCP_APPEND_OPTIONS(netif, dhcp, DHCP_STATE_REBINDING, msg_out, DHCP_DISCOVER, &options_out_len);
     dhcp_option_trailer(options_out_len, msg_out->options, p_out);
@@ -1542,10 +1464,6 @@ dhcp_reboot(struct netif *netif)
 #if ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID
     options_out_len = dhcp_option_client_id(netif, msg_out, options_out_len);
 #endif /* ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID */
-
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-    options_out_len = dhcp_option_vendor_class_identifier(netif, msg_out, options_out_len);
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
 
     LWIP_HOOK_DHCP_APPEND_OPTIONS(netif, dhcp, DHCP_STATE_REBOOTING, msg_out, DHCP_REQUEST, &options_out_len);
     dhcp_option_trailer(options_out_len, msg_out->options, p_out);
@@ -1617,10 +1535,6 @@ dhcp_release_and_stop(struct netif *netif)
 #if ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID
       options_out_len = dhcp_option_client_id(netif, msg_out, options_out_len);
 #endif /* ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID */
-
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-    options_out_len = dhcp_option_vendor_class_identifier(netif, msg_out, options_out_len);
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
 
       LWIP_HOOK_DHCP_APPEND_OPTIONS(netif, dhcp, dhcp->state, msg_out, DHCP_RELEASE, &options_out_len);
       dhcp_option_trailer(options_out_len, msg_out->options, p_out);
@@ -1782,95 +1696,6 @@ dhcp_option_client_id(struct netif *netif, struct dhcp_msg *msg_out, u16_t optio
 }
 #endif /* ESP_DHCP && !ESP_DHCP_DISABLE_CLIENT_ID */
 
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-static u8_t vendor_class_len = 0;
-static char *vendor_class_buf = NULL;
-
-err_t 
-dhcp_set_vendor_class_identifier(u8_t len, char *str)
-{
-  if (len == 0 || str == NULL) {
-    return ERR_ARG;
-  }
-
-  if (vendor_class_buf && vendor_class_len != len) {
-    mem_free(vendor_class_buf);
-    vendor_class_buf = NULL;
-  }
-
-  if (!vendor_class_buf) {
-    vendor_class_buf = (char *)mem_malloc(len + 1);
-    if (vendor_class_buf == NULL) {
-      return ERR_MEM;
-    }
-
-    vendor_class_len = len;
-  }
-
-  memcpy(vendor_class_buf, str, len);
-  return ERR_OK;
-}
-
-err_t 
-dhcp_get_vendor_specific_information(u8_t len, char *str)
-{
-  u8_t copy_len = 0;
-
-  if (len == 0 || str == NULL) {
-    return ERR_ARG;
-  }
-
-  copy_len = LWIP_MIN(len, sizeof(dhcp_option_vsi));
-
-  memcpy(str, dhcp_option_vsi, copy_len);
-
-  return ERR_OK;
-}
-
-static u16_t
-dhcp_option_vendor_class_identifier(struct netif *netif, struct dhcp_msg *msg_out, u16_t options_out_len)
-{
-    size_t i;
-    int available;
-    const char *p = NULL;
-    u8_t len = 0;
-
-    if (netif == NULL || msg_out == NULL) {
-      return ERR_ARG;
-    }
-
-    /* Shrink len to available bytes (need 2 bytes for OPTION_HOSTNAME and 1 byte for trailer) */
-
-    available = DHCP_OPTIONS_LEN - options_out_len - 3;
-    LWIP_ASSERT("DHCP: problem unfolding DHCP options - too short on memory!", 0 <= available);
-
-    if (vendor_class_buf && vendor_class_len) {
-      p = vendor_class_buf;
-      LWIP_ASSERT("DHCP: vendor_class_len is too long!", vendor_class_len <= available);
-      len = vendor_class_len;
-    } else {
-#if LWIP_NETIF_HOSTNAME
-      if (netif->hostname != NULL) {
-        size_t namelen = strlen(netif->hostname);
-        if ((namelen > 0) && (namelen < 0xFF)) {
-          p = netif->hostname;
-          LWIP_ASSERT("DHCP: hostname is too long!", namelen <= available);
-          len = (u8_t)namelen;
-        }
-      }
-#endif
-    }
-
-    len = LWIP_MIN(len, available);
-    if (p) {
-      options_out_len = dhcp_option(options_out_len, msg_out->options, DHCP_OPTION_VCI, len);
-      for (i = 0; i < len; i ++) {
-        options_out_len = dhcp_option_byte(options_out_len, msg_out->options, p[i]);
-      }
-    }
-    return options_out_len;
-}
-#endif /* ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
 
 /**
  * Extract the DHCP message and the DHCP options.
@@ -2019,11 +1844,6 @@ again:
         LWIP_ERROR("len == 4", len == 4, return ERR_VAL;);
         decode_idx = DHCP_OPTION_IDX_T2;
         break;
-#if ESP_DHCP && !ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-      case (DHCP_OPTION_VSI):
-        decode_idx = DHCP_OPTION_IDX_VSI;
-        break;
-#endif
       default:
         decode_len = 0;
         LWIP_DEBUGF(DHCP_DEBUG, ("skipping option %"U16_F" in options\n", (u16_t)op));
@@ -2053,10 +1873,7 @@ decode_next:
           if (decode_len > 4) {
             /* decode more than one u32_t */
             u16_t next_val_offset;
-#if ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER
-            /* correct DHCP VCI data might not be aligned, so remove it. */
             LWIP_ERROR("decode_len %% 4 == 0", decode_len % 4 == 0, return ERR_VAL;);
-#endif /* ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER */
             dhcp_got_option(dhcp, decode_idx);
             dhcp_set_option_value(dhcp, decode_idx, lwip_htonl(value));
             decode_len = (u8_t)(decode_len - 4);
@@ -2073,8 +1890,6 @@ decode_next:
 #if ESP_DHCP
           } else if (decode_len == 2) {
             value = (u32_t)lwip_htons((u16_t)value);
-          } else if (decode_len == 3) {
-            value = lwip_ntohl(value);
 #endif /* ESP_DHCP */
           } else {
             LWIP_ERROR("invalid decode_len", decode_len == 1, return ERR_VAL;);

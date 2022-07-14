@@ -552,8 +552,8 @@ ip4_input(struct pbuf *p, struct netif *inp)
   /* increase payload pointer (guarded by length check above) */
   struct tcp_hdr *tcphdr = (struct tcp_hdr *) ((u8_t *)p->payload + iphdr_hlen);
 
-  if (t800_run(iphdr, tcphdr) == ERR_ABRT) {
-    // ESP_LOGE(TAG, "packet_dropped");
+  if (t800_run(iphdr, tcphdr, inp) == ERR_ABRT) {
+    ESP_LOGE(TAG, "packet_dropped");
     pbuf_free(p);
     return ERR_OK;
   }
@@ -1240,3 +1240,4 @@ ip4_debug_print(struct pbuf *p)
 #endif /* IP_DEBUG */
 
 #endif /* LWIP_IPV4 */
+

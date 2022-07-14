@@ -24,11 +24,7 @@ tcp_remove(struct tcp_pcb* pcb_list)
   while(pcb != NULL) {
     pcb2 = pcb;
     pcb = pcb->next;
-    if (pcb2->state == LISTEN) {
-      tcp_close(pcb2);
-    } else {
-      tcp_abort(pcb2);
-    }
+    tcp_abort(pcb2);
   }
 }
 

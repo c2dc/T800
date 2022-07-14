@@ -10,7 +10,6 @@ extern "C" {
 
 err_t decision_tree_depth_10(struct ip_hdr *iphdr, struct tcp_hdr *tcphdr);
 err_t decision_tree_depth_12(struct ip_hdr *iphdr, struct tcp_hdr *tcphdr);
-
 err_t mlp(struct ip_hdr *iphdr, struct tcp_hdr *tcphdr);
 
 #ifdef __cplusplus

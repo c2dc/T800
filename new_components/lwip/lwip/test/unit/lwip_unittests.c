@@ -5,7 +5,6 @@
 #include "udp/test_udp.h"
 #include "tcp/test_tcp.h"
 #include "tcp/test_tcp_oos.h"
-#include "tcp/test_tcp_state.h"
 #include "core/test_def.h"
 #include "core/test_mem.h"
 #include "core/test_netif.h"
@@ -70,7 +69,6 @@ int main(void)
     udp_suite,
     tcp_suite,
     tcp_oos_suite,
-    tcp_state_suite,
     def_suite,
     mem_suite,
     netif_suite,

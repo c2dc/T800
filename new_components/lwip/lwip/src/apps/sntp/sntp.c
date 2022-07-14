@@ -525,7 +525,6 @@ sntp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr,
     /* KOD errors are only processed in case of an explicit poll response */
     if (sntp_opmode == SNTP_OPMODE_POLL) {
       /* Kiss-of-death packet. Use another server or increase UPDATE_DELAY. */
-      sys_untimeout(sntp_request, NULL);
       sntp_try_next_server(NULL);
     }
   } else {
@@ -867,8 +866,7 @@ sntp_getserver(u8_t idx)
  * Initialize one of the NTP servers by name
  *
  * @param idx the index of the NTP server to set must be < SNTP_MAX_SERVERS
- * @param server DNS name of the NTP server to set, to be resolved at contact
- *        time.  Note sntp stores the pointer, it doesn't copy the string.
+ * @param server DNS name of the NTP server to set, to be resolved at contact time
  */
 void
 sntp_setservername(u8_t idx, const char *server)

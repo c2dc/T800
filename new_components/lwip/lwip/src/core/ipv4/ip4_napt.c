@@ -176,7 +176,7 @@ ip_napt_enable(u32_t addr, int enable)
   for (netif = netif_list; netif; netif = netif->next) {
     if (netif->napt)
       napt_in_any_netif = 1;
-    if (netif_is_up(netif) && !ip_addr_isany(&netif->ip_addr) && (ip_2_ip4(&netif->ip_addr)->addr) == addr && enable) {
+    if (netif_is_up(netif) && !ip_addr_isany(&netif->ip_addr) && netif->ip_addr.u_addr.ip4.addr == addr && enable) {
       netif->napt = 1;
       ip_napt_init(IP_NAPT_MAX, IP_PORTMAP_MAX);
       break;
@@ -567,12 +567,10 @@ static void
 ip_napt_modify_port_udp(struct udp_hdr *udphdr, u8_t dest, u16_t newval)
 {
   if (dest) {
-    if (udphdr->chksum != 0)
-      checksumadjust((u8_t *)&udphdr->chksum, (u8_t *)&udphdr->dest, 2, (u8_t *)&newval, 2);
+    checksumadjust((u8_t *)&udphdr->chksum, (u8_t *)&udphdr->dest, 2, (u8_t *)&newval, 2);
     udphdr->dest = newval;
   } else {
-    if (udphdr->chksum != 0)
-      checksumadjust((u8_t *)&udphdr->chksum, (u8_t *)&udphdr->src, 2, (u8_t *)&newval, 2);
+    checksumadjust((u8_t *)&udphdr->chksum, (u8_t *)&udphdr->src, 2, (u8_t *)&newval, 2);
     udphdr->src = newval;
   }
 }
@@ -580,8 +578,7 @@ ip_napt_modify_port_udp(struct udp_hdr *udphdr, u8_t dest, u16_t newval)
 static void
 ip_napt_modify_addr_udp(struct udp_hdr *udphdr, ip4_addr_p_t *oldval, u32_t newval)
 {
-  if (udphdr->chksum != 0)
-    checksumadjust( (u8_t *)&udphdr->chksum, (u8_t *)&oldval->addr, 4, (u8_t *)&newval, 4);
+  checksumadjust( (u8_t *)&udphdr->chksum, (u8_t *)&oldval->addr, 4, (u8_t *)&newval, 4);
 }
 #endif /* LWIP_UDP */
 
@@ -698,7 +695,7 @@ ip_napt_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp, struct 
       /* register src addr and iecho->id and dest info */
       ip_napt_add(IP_PROTO_ICMP, iphdr->src.addr, iecho->id, iphdr->dest.addr, iecho->id);
 
-      ip_napt_modify_addr(iphdr, &iphdr->src, ip_2_ip4(&outp->ip_addr)->addr);
+      ip_napt_modify_addr(iphdr, &iphdr->src, outp->ip_addr.u_addr.ip4.addr);
     }
 
     return ERR_OK;
@@ -745,8 +742,8 @@ ip_napt_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp, struct 
 
     if (mport != tcphdr->src)
       ip_napt_modify_port_tcp(tcphdr, 0, mport);
-    ip_napt_modify_addr_tcp(tcphdr, &iphdr->src, ip_2_ip4(&outp->ip_addr)->addr);
-    ip_napt_modify_addr(iphdr, &iphdr->src, ip_2_ip4(&outp->ip_addr)->addr);
+    ip_napt_modify_addr_tcp(tcphdr, &iphdr->src, outp->ip_addr.u_addr.ip4.addr);
+    ip_napt_modify_addr(iphdr, &iphdr->src, outp->ip_addr.u_addr.ip4.addr);
 
     return ERR_OK;
   }
@@ -786,8 +783,8 @@ ip_napt_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp, struct 
 
     if (mport != udphdr->src)
       ip_napt_modify_port_udp(udphdr, 0, mport);
-    ip_napt_modify_addr_udp(udphdr, &iphdr->src, ip_2_ip4(&outp->ip_addr)->addr);
-    ip_napt_modify_addr(iphdr, &iphdr->src, ip_2_ip4(&outp->ip_addr)->addr);
+    ip_napt_modify_addr_udp(udphdr, &iphdr->src, outp->ip_addr.u_addr.ip4.addr);
+    ip_napt_modify_addr(iphdr, &iphdr->src, outp->ip_addr.u_addr.ip4.addr);
     return ERR_OK;
   }
 #endif

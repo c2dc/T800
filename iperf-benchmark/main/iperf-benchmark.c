@@ -195,18 +195,23 @@ void setup_experiment(exp_arg_t* arg) {
 
     // 3. Assign t800 function pointer to tree chosen by attacker
     t800_config_t config = {
-        .eval = NULL,
-        .mode = SELECTED
+        .statefull_eval = NULL,
+        .statefull_eval = NULL,
+        .mode = STATELESS
     };
     switch (chosen_tree) {
         case '0':
-            config.eval = decision_tree_depth_10;
+            config.stateless_eval = decision_tree_depth_10;
             break;
         case '2':
-            config.eval = decision_tree_depth_12;
+            config.stateless_eval = decision_tree_depth_12;
             break;
         case 'm':
-            config.eval = mlp;
+            config.stateless_eval = mlp;
+            break;
+        case 'f':
+            config.mode = STATEFULL;
+            // config.statefull_eval = statefull_function()
             break;
         case 'n':
             config.mode = UNINITIALIZED;
