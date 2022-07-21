@@ -1,7 +1,6 @@
 #pragma once
 
 #include "stateless.h"
-#include "queue.h"
 #include "hash.h"
 #include "connection.h"
 
@@ -17,7 +16,7 @@ extern "C" {
 
 typedef struct _t800_config_t {
     err_t (*stateless_eval)(struct ip_hdr *, struct tcp_hdr *);
-    err_t (*statefull_eval)(queue_t *);
+    err_t (*statefull_eval)(conn_netflow_v5_t *);
     t800_mode mode;
 } t800_config_t;
 
