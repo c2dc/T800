@@ -114,7 +114,7 @@ def main():
 
             esp32_addr = ("192.168.15.117", esp32_addr[1])
             print(f"esp32_addr[0] = {esp32_addr[0]}")
-            iperf = subprocess.Popen(["iperf", "-c", esp32_addr[0], "-B", "0.0.0.0:5001", "-i", "1", "-t", "180", "-p", "5001", "-b", "16000000pps"], start_new_session=True)
+            iperf = subprocess.Popen(["iperf", "-c", esp32_addr[0], "-B", "0.0.0.0:5001", "-i", "1", "-t", "360", "-p", "5001", "-b", "16000000pps"], start_new_session=True)
             nmap = subprocess.Popen(["nmap", "-sS", esp32_addr[0], "-p-", "-A", "-T", "insane"], start_new_session=True)
             # zmap = subprocess.Popen(["zmap", "-B", "1M", "-p", "0", "-n", "256", "--probes=250", "192.168.15.0/24", "-i", "wlo1", "--gateway-mac=ac:c6:62:ee:c2:27"], start_new_session=True)
             # hping = subprocess.Popen(["hping3", esp32_addr[0], "-c", "50", "-V", "-p", "++1", "-S"], start_new_session=True)
