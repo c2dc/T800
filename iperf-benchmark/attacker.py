@@ -121,16 +121,16 @@ def main():
             # unicorn = subprocess.Popen(["unicornscan", "-Iv", "-mTs", "-R", "3", esp32_addr[0], "--interface", "wlo1"], start_new_session=True)
 
             # if nmap terminates before iperf, it needs to rerun
-            while iperf.poll() is None:
-                if nmap.poll():
-                # if zmap.poll() is not None:
-                # if hping.poll() is not None:
-                # if unicorn.poll() is not None:
-                    # unicorn = subprocess.Popen(["unicornscan", "-Iv", "-mTs", "-R", "3", esp32_addr[0], "--interface", "wlo1"], start_new_session=True)
-                    # hping = subprocess.Popen(["hping3", esp32_addr[0], "-c", "50", "-V", "-p", "++1", "-S"], start_new_session=True)
-                    nmap = subprocess.Popen(["nmap", "-sS", esp32_addr[0], "-p-", "-A", "-T", "insane"], start_new_session=True)
-                    # zmap = subprocess.Popen(["zmap", "-B", "1M", "-p", "0", "-n", "256", "--probes=250", "192.168.15.0/24", "-i", "wlo1", "--gateway-mac=ac:c6:62:ee:c2:27"], start_new_session=True)
-                    print("here")
+            # while iperf.poll() is None:
+            #     if nmap.poll():
+            #     # if zmap.poll() is not None:
+            #     # if hping.poll() is not None:
+            #     # if unicorn.poll() is not None:
+            #         # unicorn = subprocess.Popen(["unicornscan", "-Iv", "-mTs", "-R", "3", esp32_addr[0], "--interface", "wlo1"], start_new_session=True)
+            #         # hping = subprocess.Popen(["hping3", esp32_addr[0], "-c", "50", "-V", "-p", "++1", "-S"], start_new_session=True)
+            #         nmap = subprocess.Popen(["nmap", "-sS", esp32_addr[0], "-p-", "-A", "-T", "insane"], start_new_session=True)
+            #         # zmap = subprocess.Popen(["zmap", "-B", "1M", "-p", "0", "-n", "256", "--probes=250", "192.168.15.0/24", "-i", "wlo1", "--gateway-mac=ac:c6:62:ee:c2:27"], start_new_session=True)
+            #         print("here")
             # try:
             #     iperf.wait(180)
             # except: pass
