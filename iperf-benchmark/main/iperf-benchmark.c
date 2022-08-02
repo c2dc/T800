@@ -163,6 +163,7 @@ static void iperf_tcp_server(int attacker_sock) {
         if (result < 0) {
             ESP_LOGE(TAG, "errno recv: %d", errno);
             perror("erro");
+            break;
         } else {
             /* exp_bandwidth += result; */
         }
@@ -195,7 +196,7 @@ void setup_experiment(exp_arg_t* arg) {
 
     // 3. Assign t800 function pointer to tree chosen by attacker
     t800_config_t config = {
-        .statefull_eval = NULL,
+        .stateless_eval = NULL,
         .statefull_eval = NULL,
         .mode = STATELESS
     };

@@ -93,55 +93,64 @@ def msg_esp(expected, attacker, esp32_addr=None, msg=None, is_sync=False):
 def main():
     attacker = Attacker()
 
-    models = [b"2", b"m", b"0"]
+    models = [b"2"]
     for tree in models:
-        print("Going to tree", tree)
+        for i in range(10):
+            print(f"\n\n============ I = {i} ============\n\n")
+            print("Going to tree", tree)
 
-        esp32_addr = msg_esp(b"start", attacker, is_sync=True)
+            esp32_addr = msg_esp(b"start", attacker, is_sync=True)
 
-        print("[+] Starting experiment:")
+            print("[+] Starting experiment:")
+            print(f"esp32_addr: {esp32_addr} tree: {tree}")
 
-        esp32_addr = msg_esp(b"assigned", attacker, esp32_addr, tree)
+            esp32_addr = msg_esp(b"assigned", attacker, esp32_addr, tree)
 
-        print(f"[+] ESP32 assigned tree {tree}")
+            print(f"[+] ESP32 assigned tree {tree}")
 
-        print("[>] Sending packets ...")
-        attacker.collect_experiment_data()
-        time.sleep(2)   # Wait for esp32 open iperf server
-        iperf = subprocess.Popen(["iperf", "-c", esp32_addr[0], "-B", "0.0.0.0:5001", "-i", "1", "-t", "180", "-p", "5001", "-b", "16000000pps"], start_new_session=True)
-        # nmap = subprocess.Popen(["nmap", "-sS", esp32_addr[0], "-p-", "-A", "-T", "insane"], start_new_session=True)
-        # zmap = subprocess.Popen(["zmap", "-B", "1M", "-p", "0", "-n", "256", "--probes=250", "192.168.15.0/24", "-i", "wlo1", "--gateway-mac=ac:c6:62:ee:c2:27"], start_new_session=True)
-        # hping = subprocess.Popen(["hping3", esp32_addr[0], "-c", "50", "-V", "-p", "++1", "-S"], start_new_session=True)
-        unicorn = subprocess.Popen(["unicornscan", "-Iv", "-mTs", "-R", "3", esp32_addr[0], "--interface", "wlo1"], start_new_session=True)
+            print("[>] Sending packets ...")
+            attacker.collect_experiment_data()
+            time.sleep(2)   # Wait for esp32 open iperf server
 
-        # if nmap terminates before iperf, it needs to rerun
-        while iperf.poll() is None:
-            # if nmap.poll() is not None:
-            # if zmap.poll() is not None:
-            # if hping.poll() is not None:
-            if unicorn.poll() is not None:
-                unicorn = subprocess.Popen(["unicornscan", "-Iv", "-mTs", "-R", "3", esp32_addr[0], "--interface", "wlo1"], start_new_session=True)
-                # hping = subprocess.Popen(["hping3", esp32_addr[0], "-c", "50", "-V", "-p", "++1", "-S"], start_new_session=True)
-                # nmap = subprocess.Popen(["nmap", "-sS", esp32_addr[0], "-p-", "-A", "-T", "insane"], start_new_session=True)
-                # zmap = subprocess.Popen(["zmap", "-B", "1M", "-p", "0", "-n", "256", "--probes=250", "192.168.15.0/24", "-i", "wlo1", "--gateway-mac=ac:c6:62:ee:c2:27"], start_new_session=True)
-                print("here")
-        # iperf.wait()
-        # nmap.kill()
-        # zmap.kill()
-        # hping.kill()
-        unicorn.kill()
-        print("[>] Finished sending packets")
+            esp32_addr = ("192.168.15.117", esp32_addr[1])
+            print(f"esp32_addr[0] = {esp32_addr[0]}")
+            iperf = subprocess.Popen(["iperf", "-c", esp32_addr[0], "-B", "0.0.0.0:5001", "-i", "1", "-t", "30", "-p", "5001", "-b", "16000000pps"], start_new_session=True)
+            nmap = subprocess.Popen(["nmap", "-sS", esp32_addr[0], "-p-", "-A", "-T", "insane"], start_new_session=True)
+            # zmap = subprocess.Popen(["zmap", "-B", "1M", "-p", "0", "-n", "256", "--probes=250", "192.168.15.0/24", "-i", "wlo1", "--gateway-mac=ac:c6:62:ee:c2:27"], start_new_session=True)
+            # hping = subprocess.Popen(["hping3", esp32_addr[0], "-c", "50", "-V", "-p", "++1", "-S"], start_new_session=True)
+            # unicorn = subprocess.Popen(["unicornscan", "-Iv", "-mTs", "-R", "3", esp32_addr[0], "--interface", "wlo1"], start_new_session=True)
 
-        attacker.stop_experiment("data.csv")
+            # if nmap terminates before iperf, it needs to rerun
+            while iperf.poll() is None:
+                if nmap.poll():
+                # if zmap.poll() is not None:
+                # if hping.poll() is not None:
+                # if unicorn.poll() is not None:
+                    # unicorn = subprocess.Popen(["unicornscan", "-Iv", "-mTs", "-R", "3", esp32_addr[0], "--interface", "wlo1"], start_new_session=True)
+                    # hping = subprocess.Popen(["hping3", esp32_addr[0], "-c", "50", "-V", "-p", "++1", "-S"], start_new_session=True)
+                    nmap = subprocess.Popen(["nmap", "-sS", esp32_addr[0], "-p-", "-A", "-T", "insane"], start_new_session=True)
+                    # zmap = subprocess.Popen(["zmap", "-B", "1M", "-p", "0", "-n", "256", "--probes=250", "192.168.15.0/24", "-i", "wlo1", "--gateway-mac=ac:c6:62:ee:c2:27"], start_new_session=True)
+                    print("here")
+            # try:
+            #     iperf.wait(180)
+            # except: pass
+            iperf.wait()
+            nmap.kill()
+            # zmap.kill()
+            # hping.kill()
+            # unicorn.kill()
+            print("[>] Finished sending packets")
 
-        # Receiving experiment results
-        msg_esp(b"complete", attacker, esp32_addr, b"D")
+            attacker.stop_experiment("data.csv")
 
-        print("[+] ESP32 experiment complete, moving to next index")
-        print("[+] Experiment data saved in file")
+            # Receiving experiment results
+            esp32_addr = ("192.168.15.117", 3333)
+            msg_esp(b"complete", attacker, esp32_addr, b"D")
 
-        time.sleep(5)
+            print("[+] ESP32 experiment complete, moving to next index")
+            print("[+] Experiment data saved in file")
 
+            time.sleep(5)
 
 if __name__ == "__main__":
     main()

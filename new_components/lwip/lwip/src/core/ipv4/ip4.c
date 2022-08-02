@@ -553,7 +553,7 @@ ip4_input(struct pbuf *p, struct netif *inp)
   struct tcp_hdr *tcphdr = (struct tcp_hdr *) ((u8_t *)p->payload + iphdr_hlen);
 
   if (t800_run(iphdr, tcphdr, inp) == ERR_ABRT) {
-    ESP_LOGE(TAG, "packet_dropped");
+    // ESP_LOGE(TAG, "packet_dropped");
     pbuf_free(p);
     return ERR_OK;
   }
