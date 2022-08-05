@@ -21,6 +21,7 @@
 #include "t800.h"
 #include "protocol_examples_common.h"
 #include "nvs_flash.h"
+#include "driver/gpio.h"
 
 #define MENUCONFIG_PORT             CONFIG_EXAMPLE_PORT
 #define KEEPALIVE_IDLE              CONFIG_EXAMPLE_KEEPALIVE_IDLE
@@ -33,6 +34,7 @@
 #define IPERF_PORT                  CONFIG_IPERF_PORT
 #define SAMPLING_INTERVAL           CONFIG_SAMPLING_INTERVAL
 #define BENCHMARK_DURATION          CONFIG_BENCHMARK_DURATION
+#define ENERGY_GPIO                 5
 
 static const char *TAG = "Iperf Benchmark";
 
@@ -151,6 +153,7 @@ exit:
 }
 
 static void iperf_tcp_server(int attacker_sock) {
+    gpio_set_level(ENERGY_GPIO, 1);
     struct sockaddr_in listen_addr = { 0 };
     int recv_socket = iperf_setup_tcp_server(&listen_addr); 
     socklen_t socklen = sizeof(listen_addr);
@@ -226,11 +229,18 @@ void setup_experiment(exp_arg_t* arg) {
 
     // 4. Signal that ESP32 assigned the tree previously sent and experiment is ready to begin
     send_msg("assigned", arg->sock, &arg->addr);
+
+    ESP_LOGI(TAG, "Reseting energy PIN");
+    gpio_reset_pin(ENERGY_GPIO);
+    /* Set the GPIO as a push/pull output */
+    gpio_set_direction(ENERGY_GPIO, GPIO_MODE_OUTPUT);
 }
 
 static void experiment_runner_task(void *pvParameters) {
     exp_arg_t *arg = (exp_arg_t *)pvParameters;
+    gpio_set_level(ENERGY_GPIO, 1);
     iperf_tcp_server(arg->sock);
+    gpio_set_level(ENERGY_GPIO, 0);
 
     // Signal to attacker that esp will restart
     send_msg("complete", arg->sock, &arg->addr);
