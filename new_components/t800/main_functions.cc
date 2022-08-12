@@ -52,7 +52,6 @@ err_t mlp(struct ip_hdr *iphdr, struct tcp_hdr *tcphdr) {
 
   // Obtain the output value from the tensor
   float value = output->data.f[0];
-  float value2 = output->data.f[1];
 
-  return value < value2 ? ERR_ABRT : ERR_OK;
+  return value > 0.5 ? ERR_ABRT : ERR_OK;
 }
