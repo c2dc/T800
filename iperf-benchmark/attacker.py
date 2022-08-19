@@ -118,7 +118,7 @@ def main():
 
     attacker = Attacker()
 
-    models = [b"n"]
+    models = [b"0"]
     for tree in models:
         for i in range(30):
             print(f"\n\n============ I = {i} ============\n\n")
@@ -137,20 +137,20 @@ def main():
             print(f"[+] ESP32 assigned tree {tree}")
 
             stop_thread = False
-            monitor = threading.Thread(target=serial_monitor, args=(f'./output_pwr/pwr_measure_{i}.csv', ser, lambda: stop_thread, ))
+            monitor = threading.Thread(target=serial_monitor, args=(f'./output_pwr/I1M0A0_{i}_newrun.csv', ser, lambda: stop_thread, ))
             monitor.start()
 
             print("[>] Sending packets ...")
             attacker.collect_experiment_data()
             time.sleep(2)   # Wait for esp32 open iperf server
 
-            iperf = subprocess.Popen(["iperf", "-c", esp32_addr[0], "-B", "0.0.0.0:5001", "-i", "1", "-t", "360", "-p", "5001", "-b", "8000000pps"], start_new_session=True)
-            nmap = subprocess.Popen(["nmap", "-sS", esp32_addr[0], "-p-", "-A", "-T", "insane"], start_new_session=True)
+            iperf = subprocess.Popen(["iperf", "-c", esp32_addr[0], "-B", "0.0.0.0:5001", "-i", "1", "-t", "360", "-p", "5001", "-b", "16000000pps"], start_new_session=True)
+            #nmap = subprocess.Popen(["nmap", "-sS", esp32_addr[0], "-p-", "-A", "-T", "insane"], start_new_session=True)
             iperf.wait()
-            nmap.kill()
+            #nmap.kill()
             print("[>] Finished sending packets")
 
-            attacker.stop_experiment("data.csv")
+            attacker.stop_experiment("./output_data/I1M0A0_newrun.csv")
 
             # Receiving experiment results
             msg_esp(b"complete", attacker, esp32_addr, b"D")
