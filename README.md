@@ -1,17 +1,26 @@
-# T800: ferramenta de firewall e benchmark para IoT
+# T800: packet filtering and benchmark for IoT
 
-## Pré-requisitos
-Antes de executar o benchmark com o T800 no sistema da ESP32, os seguintes softwares devem estar instalados na sua máquina:
-- Python3
-- [Framework ESP-IDF](https://github.com/espressif/esp-idf) feito pela empresa Espressif
-- *iperf v2*
-- *NMap*
+## Requirements
+Prior to run the benchmark with T800 with ESP32, the following softwares are required on the host computer:
+- Python 3 _(tested with v3.8)_
+- [ESP-IDF Framework ](https://github.com/espressif/esp-idf)
+- *iperf v2* _(tested with 2.0.13)_
+- *NMap* _(tested with 7.80)_
 
-## Como instalar
+## How to Install
 
-1. Para instalar o componente `t800` e suas dependências no ESP-IDF do seu sistema, execute o script `install.sh`.
+1. Install the `t800` component and its dependencies on the ESP-IDF, run `install.sh`:
 
-2. Para configurar a rede em que o experimento vai ser executado, entre na pasta `iperf-benchmark` e execute `idf.py menuconfig`. Altere os valores no menu `Example Connection Configuration` para a SSID e a senha da sua Wi-Fi.
+```
+$ source install.sh
+```
+
+2. It is required to configure the network. Enter the folder `iperf-benchmark` and run `idf.py menuconfig`. Change the values at the menu option `Example Connection Configuration`. Change the SSID and the Wi-Fi network password.
+
+```
+$ cd iperf-benchmark
+$ idf.py menuconfig
+```
 
 3. Em seguida, para subir a aplicação para a ESP32, conecte-a por USB à sua maquina, então encontre a porta que ela está conectada e, por fim, execute `idf.py flash -p <PORTA_DA_ESP32>`. Execute 1 vez a aplicação, com `idf.py -p <YOUR_ESP32_PORT> monitor`, para que a ESP obtenha um IP na sua rede e finalize essa execução com `ctrl+[`.
 
@@ -24,3 +33,8 @@ Para nossos experimentos, o dispositivo utilizado foi a ESP32. É válido ressal
 
 
 > Obs: Durante o experimento o pino D5 será 0 quando o experimento não estiver rodando e 1 durante sua execução.
+
+## Cite
+```
+```
+

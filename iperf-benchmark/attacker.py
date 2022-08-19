@@ -98,7 +98,7 @@ def serial_monitor(file_name, ser, stop):
     with open(file_name, "w") as f:
         while True:
             character = ser.read().decode()
-            print(f'c = {character}')
+            #print(f'c = {character}')
             if character == "\n":
                 f.write(serial_msg+character)
                 serial_msg = ""
