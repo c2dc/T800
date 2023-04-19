@@ -22,17 +22,16 @@ $ cd iperf-benchmark
 $ idf.py menuconfig
 ```
 
-3. Em seguida, para subir a aplicação para a ESP32, conecte-a por USB à sua maquina, então encontre a porta que ela está conectada e, por fim, execute `idf.py flash -p <PORTA_DA_ESP32>`. Execute 1 vez a aplicação, com `idf.py -p <YOUR_ESP32_PORT> monitor`, para que a ESP obtenha um IP na sua rede e finalize essa execução com `ctrl+[`.
+3. To upload the application to the ESP32, connect it to your machine via USB, then find the port it's connected to and finally run `idf.py flash -p <YOUR_ESP32_PORT>`. Run the application once with `idf.py -p <YOUR_ESP32_PORT> monitor`, so that the ESP can obtain an IP on your network, and end this execution with `ctrl+[`.
 
-4. Finalmente, para poder executar o benchmark, execute `idf.py menuconfig` e altere as configurações em `Benchmark Configuration` para incluir o IPv4 da máquina atacante e da ESP32. Então:
-   * Rode `sudo python attacker.py` em uma janela de terminal
-   * Rode `idf.py -p <YOUR_ESP32_PORT> flash monitor` em outra janela de terminal, em paralelo.
-   * Depois de realizar o experimento, um arquivo `data.csv` será gerado com todos os dados coletados durante o experimento.
+4. Finally, to be able to run the benchmark, run `idf.py menuconfig` and change the settings in `Benchmark Configuration` to include the IPv4 of the attacking machine and the ESP32. Then:
+   * Run `sudo python attacker.py` in a terminal window.
+   * Run `idf.py -p <YOUR_ESP32_PORT> flash monitor` in another terminal window, in parallel.
+   * After conducting the experiment, a file `data.csv` will be generated with all the data collected during the experiment.
 
-Para nossos experimentos, o dispositivo utilizado foi a ESP32. É válido ressaltar que as portas TCP `6767`, `6768` e `5001` ***não*** podem estar sendo utilizadas pelo Sistema Operacional durante a execução dos experimentos. Caso elas estejam sendo utilizadas, essas configurações podem ser alteradas utilizando `idf.py menuconfig`.
+For our experiments, the device used was the ESP32. It is worth noting that TCP ports `6767`, `6768`, and `5001` ***cannot*** be in use by the Operating System during the experiment. If they are being used, these settings can be changed using `idf.py menuconfig`.
 
-
-> Obs: Durante o experimento o pino D5 será 0 quando o experimento não estiver rodando e 1 durante sua execução.
+> Note: During the experiment, pin D5 will be 0 when the experiment is not running and 1 during its execution.
 
 ## Cite
 ```
