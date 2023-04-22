@@ -33,6 +33,10 @@ For our experiments, the device used was the ESP32. It is worth noting that TCP 
 
 > Note: During the experiment, pin D5 will be 0 when the experiment is not running and 1 during its execution.
 
+## Reproducibility
+
+More details on how to reproduce this work is available inside the `manual` folder in both [English](https://github.com/c2dc/T800/blob/main/manual/manual_en.md) and [pt-BR](https://github.com/c2dc/T800/blob/main/manual/manual_pt-br.md).
+
 ## Cite
 ```
 ```
