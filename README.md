@@ -39,5 +39,17 @@ More details on how to reproduce this work is available inside the `manual` fold
 
 ## Cite
 ```
+@article{10.5753/jisa.2024.3835,
+  title={Design and implementation of intelligent packet filtering in IoT microcontroller-based devices},
+  volume={15},
+  url={https://journals-sol.sbc.org.br/index.php/jisa/article/view/3835},
+  DOI={10.5753/jisa.2024.3835},
+  number={1},
+  journal={Journal of Internet Services and Applications},
+  author={Bertoli, Gustavo de Carvalho and Fernandes, Gabriel Victor C. and Monici, Pedro H. Borges and Guibo, César H. de Araujo and Santos, Aldri Luiz dos and Pereira Júnior, Lourenço Alvez},
+  year={2024},
+  month={Aug.},
+  pages={289–301}
+}
 ```
 
